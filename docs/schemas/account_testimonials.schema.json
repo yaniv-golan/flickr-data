@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "testimonials_given": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user": { "type": "string" },
+          "comment": { "type": "string" },
+          "url": { "type": "string", "format": "uri" }
+        },
+        "required": ["user", "comment", "url"],
+        "description": "A testimonial given by the user to another user."
+      },
+      "description": "An array of testimonials given by the user."
+    },
+    "testimonials_received": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user": { "type": "string" },
+          "comment": { "type": "string" },
+          "url": { "type": "string", "format": "uri" }
+        },
+        "required": ["user", "comment", "url"],
+        "description": "A testimonial received by the user from another user."
+      },
+      "description": "An array of testimonials received by the user."
+    }
+  },
+  "required": ["testimonials_given", "testimonials_received"],
+  "description": "Schema for testimonials given and received by the user."
+}
