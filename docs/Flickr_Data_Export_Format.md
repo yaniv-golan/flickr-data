@@ -52,25 +52,35 @@ To help with validating and understanding the structure of the JSON data files, 
 
 The schemas are available in the `docs/schemas` directory:
 
+## JSON Schemas
+
+To help with validating and understanding the structure of the JSON data files, JSON Schemas are provided. These schemas describe the expected structure and content of each JSON file in the Flickr data export.
+
+The schemas are available in the `docs/schemas` directory:
+
 - [account_profile.schema.json](schemas/account_profile.schema.json)
 - [account_testimonials.schema.json](schemas/account_testimonials.schema.json)
 - [albums.schema.json](schemas/albums.schema.json)
-- [contacts_part###.schema.json](schemas/contacts_part###.schema.json)
-- [faves_part###.schema.json](schemas/faves_part###.schema.json)
-- [followers_part###.schema.json](schemas/followers_part###.schema.json)
+- [contacts_part001.schema.json](schemas/contacts_part001.schema.json)
+  - Note: `contacts_part###.json` indicates the sequence of contact parts.
+- [faves_part001.schema.json](schemas/faves_part001.schema.json)
+  - Note: `faves_part###.json` indicates the sequence of favorite parts.
+- [followers_part001.schema.json](schemas/followers_part001.schema.json)
+  - Note: `followers_part###.json` indicates the sequence of follower parts.
 - [galleries.schema.json](schemas/galleries.schema.json)
 - [group_discussions.schema.json](schemas/group_discussions.schema.json)
 - [photo_[ID].schema.json](schemas/photo_[ID].schema.json)
-- [photos_comments_part###.schema.json](schemas/photos_comments_part###.schema.json)
-- [received_flickrmail_part###.schema.json](schemas/received_flickrmail_part###.schema.json)
-- [sent_flickrmail_part###.schema.json](schemas/sent_flickrmail_part###.schema.json)
-- [sets_comments_part###.schema.json](schemas/sets_comments_part###.schema.json)
+  - Note: `photo_[ID].json` should be replaced with the actual photo ID.
+- [photos_comments_part001.schema.json](schemas/photos_comments_part001.schema.json)
+  - Note: `photos_comments_part###.json` indicates the sequence of photo comment parts.
+- [received_flickrmail_part001.schema.json](schemas/received_flickrmail_part001.schema.json)
+  - Note: `received_flickrmail_part###.json` indicates the sequence of received Flickr mail parts.
+- [sent_flickrmail_part001.schema.json](schemas/sent_flickrmail_part001.schema.json)
+  - Note: `sent_flickrmail_part###.json` indicates the sequence of sent Flickr mail parts.
+- [sets_comments_part001.schema.json](schemas/sets_comments_part001.schema.json)
+  - Note: `sets_comments_part###.json` indicates the sequence of set comment parts.
 
 Refer to these schemas to ensure that your JSON data files conform to the expected structure and format.
-
-
-Refer to these schemas to ensure that your JSON data files conform to the expected structure and format.
-
 
 ## Zip File Structure
 
