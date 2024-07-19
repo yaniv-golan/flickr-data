@@ -55,19 +55,19 @@ The schemas are available in the `docs/schemas` directory:
 - [account_profile.schema.json](schemas/account_profile.schema.json)
 - [account_testimonials.schema.json](schemas/account_testimonials.schema.json)
 - [albums.schema.json](schemas/albums.schema.json)
-- [contacts_part001.schema.json](schemas/contacts_part001.schema.json)
-- [faves_part001.schema.json](schemas/faves_part001.schema.json)
-- [followers_part001.schema.json](schemas/followers_part001.schema.json)
+- [contacts_part[nnn].schema.json](schemas/contacts_part[nnn].schema.json)
+- [faves_part[nnn].schema.json](schemas/faves_part[nnn].schema.json)
+- [followers_part[nnn].schema.json](schemas/followers_part[nnn].schema.json)
 - [galleries.schema.json](schemas/galleries.schema.json)
 - [group_discussions.schema.json](schemas/group_discussions.schema.json)
 - [photo_[ID].schema.json](schemas/photo_[ID].schema.json)
-- [photos_comments_part001.schema.json](schemas/photos_comments_part001.schema.json)
-- [photos_comments_part002.schema.json](schemas/photos_comments_part002.schema.json)
-- [received_flickrmail_part001.schema.json](schemas/received_flickrmail_part001.schema.json)
-- [sent_flickrmail_part001.schema.json](schemas/sent_flickrmail_part001.schema.json)
-- [sets_comments_part001.schema.json](schemas/sets_comments_part001.schema.json)
+- [photos_comments_part[nnn].schema.json](schemas/photos_comments_part[nnn].schema.json)
+- [received_flickrmail_part[nnn].schema.json](schemas/received_flickrmail_part[nnn].schema.json)
+- [sent_flickrmail_part[nnn].schema.json](schemas/sent_flickrmail_part[nnn].schema.json)
+- [sets_comments_part[nnn].schema.json](schemas/sets_comments_part[nnn].schema.json)
 
 Refer to these schemas to ensure that your JSON data files conform to the expected structure and format.
+
 
 ## Zip File Structure
 
