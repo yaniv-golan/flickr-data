@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "real_name": { "type": "string" },
+    "joined_date": { "type": "string", "format": "date" },
+    "description": { "type": "string" },
+    "country": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "profile_url": { "type": "string", "format": "uri" },
+    "nsid": { "type": "string" },
+    "screen_name": { "type": "string" },
+    "is_pro": { "type": "boolean" },
+    "showcase_photos": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "privacy": { "type": "string" },
+        "sharing": {
+          "type": "object",
+          "properties": {
+            "facebook": { "type": "boolean" },
+            "twitter": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "views": { "type": "integer" },
+        "tags_count": { "type": "integer" },
+        "geotags_count": { "type": "integer" },
+        "faves_count": { "type": "integer" },
+        "groups_count": { "type": "integer" },
+        "comments_count": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["real_name", "joined_date", "email", "profile_url", "nsid", "screen_name"]
+}
