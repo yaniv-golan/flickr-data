@@ -1,4 +1,4 @@
-# Comprehensive Technical Documentation for Flickr Data Export
+# Technical Documentation for Flickr Data Export
 
 ## Overview
 
@@ -361,4 +361,3 @@ The zip files are typically named as follows:
 2. **Data Privacy**: Pay attention to privacy settings and permissions when displaying or processing data.
 3. **Licenses**: Respect the license information provided with each photo.
 
-This comprehensive documentation should provide a solid foundation for developers to understand, process, and utilize the data exported from Flickr.
