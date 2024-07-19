@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ photo.name }} | Statickr</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #212124;
+            color: #fff;
+        }
+        .header {
+            background-color: #212124;
+            padding: 10px 20px;
+        }
+        .logo {
+            color: #fff;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+        .photo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            font-size: 24px;
+            color: #fff;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            text-decoration: none;
+        }
+        .nav-arrow.left { left: 10px; }
+        .nav-arrow.right { right: 10px; }
+        .photo-info {
+            background-color: #fff;
+            color: #212124;
+            padding: 20px;
+        }
+        .photo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .user-info img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .stats {
+            font-size: 14px;
+            color: #717171;
+        }
+        .exif-data, .groups, .albums, .tags {
+            margin-top: 20px;
+        }
+        .exif-data h3, .groups h3, .albums h3, .tags h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .group-list, .album-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .group-item, .album-item {
+            display: flex;
+            align-items: center;
+            background-color: #f3f5f6;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .group-item img, .album-item img {
+            width: 32px;
+            height: 32px;
+            margin-right: 5px;
+        }
+        .tags ul {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .tags li {
+            background-color: #f3f5f6;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/index.html" class="logo">Statickr</a>
+    </div>
+    <div class="photo-container">
+        {% if prev_photo %}
+        <a href="{{ prev_photo }}.html" class="nav-arrow left">&lt;</a>
+        {% endif %}
+        <img src="{{ img_src }}" alt="{{ photo.name }}">
+        {% if next_photo %}
+        <a href="{{ next_photo }}.html" class="nav-arrow right">&gt;</a>
+        {% endif %}
+    </div>
+    <div class="photo-info">
+        <div class="photo-meta">
+            <div class="user-info">
+                <img src="/images/user_avatar.jpg" alt="User Avatar">
+                <span>{{ photo.owner }}</span>
+            </div>
+            <div class="stats">
+                <span>{{ photo.count_views }} views</span>
+                <span>{{ photo.count_faves }} faves</span>
+                <span>{{ photo.count_comments }} comments</span>
+            </div>
+        </div>
+        <h1>{{ photo.name }}</h1>
+        <p>{{ photo.description }}</p>
+        
+        {% if photo.exif_data %}
+        <div class="exif-data">
+            <h3>EXIF Data</h3>
+            <ul>
+                {% for key, value in photo.exif_data.items() %}
+                <li>{{ key }}: {{ value }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if photo.groups %}
+        <div class="groups">
+            <h3>This photo is in {{ photo.groups|length }} groups</h3>
+            <div class="group-list">
+                {% for group in photo.groups %}
+                <div class="group-item">
+                    <img src="/images/group_icon.jpg" alt="{{ group.name }}">
+                    <span>{{ group.name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if photo.albums %}
+        <div class="albums">
+            <h3>This photo is in {{ photo.albums|length }} albums</h3>
+            <div class="album-list">
+                {% for album in photo.albums %}
+                <div class="album-item">
+                    <img src="/images/album_cover.jpg" alt="{{ album.title }}">
+                    <span>{{ album.title }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if photo.tags %}
+        <div class="tags">
+            <h3>Tags</h3>
+            <ul>
+                {% for tag in photo.tags %}
+                <li>{{ tag.tag }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
