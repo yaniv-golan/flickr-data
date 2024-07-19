@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "group_discussions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { 
+            "type": "string",
+            "description": "The type of discussion, e.g., 'topic' or 'reply'."
+          },
+          "subject": { 
+            "type": "string",
+            "description": "The subject of the discussion."
+          },
+          "url": { 
+            "type": "string", 
+            "format": "uri",
+            "description": "The URL to the discussion on Flickr."
+          },
+          "message": { 
+            "type": "string",
+            "description": "The content of the discussion message."
+          },
+          "date_create": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "The date and time the discussion was created."
+          }
+        },
+        "required": ["type", "subject", "url", "message", "date_create"],
+        "description": "Schema for an individual group discussion."
+      },
+      "description": "An array of group discussions the user has participated in."
+    }
+  },
+  "required": ["group_discussions"],
+  "description": "Schema for the user's group discussions."
+}
