@@ -46,6 +46,29 @@ For more detailed information and troubleshooting, refer to the official Flickr 
 
 These resources provide additional instructions and support for users who need assistance with the data export process.
 
+## JSON Schemas
+
+To help with validating and understanding the structure of the JSON data files, JSON Schemas are provided. These schemas describe the expected structure and content of each JSON file in the Flickr data export.
+
+The schemas are available in the `docs/schemas` directory:
+
+- [account_profile.schema.json](schemas/account_profile.schema.json)
+- [account_testimonials.schema.json](schemas/account_testimonials.schema.json)
+- [albums.schema.json](schemas/albums.schema.json)
+- [contacts_part001.schema.json](schemas/contacts_part001.schema.json)
+- [faves_part001.schema.json](schemas/faves_part001.schema.json)
+- [followers_part001.schema.json](schemas/followers_part001.schema.json)
+- [galleries.schema.json](schemas/galleries.schema.json)
+- [group_discussions.schema.json](schemas/group_discussions.schema.json)
+- [photo_[ID].schema.json](schemas/photo_[ID].schema.json)
+- [photos_comments_part001.schema.json](schemas/photos_comments_part001.schema.json)
+- [photos_comments_part002.schema.json](schemas/photos_comments_part002.schema.json)
+- [received_flickrmail_part001.schema.json](schemas/received_flickrmail_part001.schema.json)
+- [sent_flickrmail_part001.schema.json](schemas/sent_flickrmail_part001.schema.json)
+- [sets_comments_part001.schema.json](schemas/sets_comments_part001.schema.json)
+
+Refer to these schemas to ensure that your JSON data files conform to the expected structure and format.
+
 ## Zip File Structure
 
 The data export from Flickr is provided in multiple zip files. Each zip file contains various JSON files that hold different types of information related to your Flickr account.
