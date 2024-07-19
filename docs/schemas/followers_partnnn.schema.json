@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "followers": {
+      "type": "object",
+      "patternProperties": {
+        ".*": { 
+          "type": "string", 
+          "format": "uri",
+          "description": "The URL to a follower's Flickr profile."
+        }
+      },
+      "additionalProperties": false,
+      "description": "A mapping of follower names to their Flickr profile URLs."
+    }
+  },
+  "required": ["followers"],
+  "description": "Schema for the user's followers."
+}
