@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": { 
+      "type": "string",
+      "description": "The unique identifier of the photo."
+    },
+    "name": { 
+      "type": "string",
+      "description": "The name/title of the photo."
+    },
+    "description": { 
+      "type": "string",
+      "description": "The description of the photo."
+    },
+    "count_views": { 
+      "type": "integer",
+      "description": "The number of times the photo has been viewed."
+    },
+    "count_faves": { 
+      "type": "integer",
+      "description": "The number of times the photo has been favorited."
+    },
+    "count_comments": { 
+      "type": "integer",
+      "description": "The number of comments on the photo."
+    },
+    "date_taken": { 
+      "type": "string", 
+      "format": "date-time",
+      "description": "The date and time when the photo was taken."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "An array of tags associated with the photo."
+    },
+    "geo": {
+      "type": "object",
+      "properties": {
+        "latitude": { "type": "string" },
+        "longitude": { "type": "string" },
+        "accuracy": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "description": "Geolocation information for the photo."
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "url": { "type": "string", "format": "uri" }
+        },
+        "required": ["id", "name", "url"],
+        "description": "Information about the groups the photo belongs to."
+      }
+    },
+    "albums": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "An array of album IDs that the photo belongs to."
+    },
+    "privacy": { 
+      "type": "string",
+      "description": "The privacy setting for the photo."
+    },
+    "comment_permissions": { 
+      "type": "string",
+      "description": "Permissions setting for who can comment on the photo."
+    },
+    "tagging_permissions": { 
+      "type": "string",
+      "description": "Permissions setting for who can tag the photo."
+    },
+    "safety": { 
+      "type": "string",
+      "description": "Safety level of the photo (e.g., 'safe', 'moderate', 'restricted')."
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user": { "type": "string" },
+          "message": { "type": "string" },
+          "date_create": { "type": "string", "format": "date-time" }
+        },
+        "required": ["user", "message", "date_create"],
+        "description": "Comments made on the photo."
+      },
+      "description": "An array of comments on the photo."
+    }
+  },
+  "required": ["id", "name", "count_views", "count_faves", "count_comments", "date_taken"],
+  "description": "Schema for the metadata of an individual photo."
+}
