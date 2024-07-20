@@ -5,9 +5,15 @@ import json
 import shutil
 import logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime, formatdate
 import math
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, TemplateSyntaxError
+import requests
+from bs4 import BeautifulSoup
+import time
+import re
+
 
 # List of required templates
 REQUIRED_TEMPLATES = [
@@ -23,8 +29,56 @@ def setup_logging(verbose):
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=level, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def check_templates():
-    env = Environment(loader=FileSystemLoader('templates'))
+GENERIC_AVATAR_URL = "https://www.flickr.com/images/buddyicon.gif"
+
+import requests
+from bs4 import BeautifulSoup
+import re
+import logging
+import time
+
+def get_flickr_buddy_icon_url(flickr_url):
+    try:
+        response = requests.get(flickr_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        avatar_div = soup.find('div', class_=['avatar', 'person'])
+
+        if avatar_div:
+            style = avatar_div.get('style')
+            
+            if style:
+                match = re.search(r'url\((.*?)\)', style)
+                if match:
+                    avatar_url = match.group(1).strip("'\"")
+                    
+                    if avatar_url.startswith('//'):
+                        avatar_url = 'https:' + avatar_url
+
+                    logging.debug(f"Found avatar URL for {flickr_url}: {avatar_url}")
+                    return avatar_url
+
+        logging.debug(f"No avatar found for {flickr_url}")
+        return None
+
+    except requests.RequestException as e:
+        logging.error(f"Error fetching the Flickr page: {e}")
+        return None
+    finally:
+        time.sleep(1)  # Add a 1-second delay after each request, even if it fails
+    
+def get_templates_env():
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to the templates directory
+    templates_dir = os.path.join(script_dir, 'templates')
+    
+    # Setup the Jinja2 environment to load templates from the correct directory
+    env = Environment(loader=FileSystemLoader(templates_dir))
+    return env
+
+def check_templates(env):
     missing_templates = []
     for template in REQUIRED_TEMPLATES:
         try:
@@ -34,6 +88,7 @@ def check_templates():
     
     if missing_templates:
         raise FileNotFoundError(f"The following template files are missing: {', '.join(missing_templates)}")
+
 
 def extract_zip_files(source_folder, dest_folder):
     logging.info(f"Extracting ZIP files from {source_folder} to {dest_folder}")
@@ -55,8 +110,7 @@ def get_photo_filename_mapping(images_folder):
     logging.debug(f"Found {len(mapping)} photo mappings")
     return mapping
 
-def render_template(template_name, **kwargs):
-    env = Environment(loader=FileSystemLoader('templates'))
+def render_template(env, template_name, **kwargs):
     try:
         template = env.get_template(template_name)
         return template.render(**kwargs)
@@ -67,25 +121,24 @@ def render_template(template_name, **kwargs):
         logging.error(f"Syntax error in template '{template_name}': {str(e)}")
         raise
 
-def create_index_html(dest_folder):
+
+def create_index_html(env, dest_folder):
     logging.info("Creating index.html")
-    content = render_template('index.html')
+    content = render_template(env, 'index.html')
     with open(os.path.join(dest_folder, 'index.html'), 'w') as f:
         f.write(content)
 
-def create_photo_page(photo, photo_mapping, dest_folder):
+def create_photo_page(env, photo, photo_mapping, dest_folder):
     try:
         photo_id = photo['id']
         title = photo.get('name', 'Untitled')
         img_filename = photo_mapping.get(photo_id, '')
         img_src = f"../images/{img_filename}" if img_filename else ''
 
-        content = render_template('photo.html',
+        content = render_template(env, 'photo.html',
                                   photo=photo,
                                   title=title,
-                                  img_src=img_src,
-                                  prev_photo=prev_photo,
-                                  next_photo=next_photo)
+                                  img_src=img_src)
 
         photo_folder = os.path.join(dest_folder, 'photos')
         os.makedirs(photo_folder, exist_ok=True)
@@ -96,8 +149,9 @@ def create_photo_page(photo, photo_mapping, dest_folder):
     except Exception as e:
         logging.error(f"Unexpected error creating photo page for photo ID {photo_id}: {str(e)}")
 
+
         
-def create_photos_html(data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page):
+def create_photos_html(env, data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page):
     logging.info("Creating photos/index.html")
     photos = []
     photos_folder = os.path.join(dest_folder, 'photos')
@@ -121,9 +175,9 @@ def create_photos_html(data_folder, dest_folder, photo_mapping, oldest_first, en
 
         for photo in page_photos:
             photo['img_src'] = f"../images/{photo_mapping.get(photo['id'], '')}"
-            create_photo_page(photo, photo_mapping, dest_folder)
+            create_photo_page(env, photo, photo_mapping, dest_folder)
 
-        content = render_template('photos.html',
+        content = render_template(env, 'photos.html',
                                   photos=page_photos,
                                   page=page,
                                   total_pages=total_pages,
@@ -135,7 +189,8 @@ def create_photos_html(data_folder, dest_folder, photo_mapping, oldest_first, en
     if enable_paging:
         shutil.copy(os.path.join(photos_folder, 'index1.html'), os.path.join(photos_folder, 'index.html'))
 
-def create_albums_html(data_folder, dest_folder, photo_mapping, oldest_first):
+
+def create_albums_html(env, data_folder, dest_folder, photo_mapping, oldest_first):
     logging.info("Creating albums/index.html and individual album pages")
     albums_file = os.path.join(data_folder, 'albums.json')
     albums_folder = os.path.join(dest_folder, 'albums')
@@ -149,14 +204,14 @@ def create_albums_html(data_folder, dest_folder, photo_mapping, oldest_first):
 
     for album in albums_data['albums']:
         album['cover_photo_filename'] = photo_mapping.get(album.get('cover_photo', '').split('/')[-1], '')
-        create_album_page(album, data_folder, albums_folder, photo_mapping, oldest_first)
+        create_album_page(env, album, data_folder, albums_folder, photo_mapping, oldest_first)
 
-    content = render_template('albums.html', albums=albums_data['albums'])
+    content = render_template(env, 'albums.html', albums=albums_data['albums'])
 
     with open(os.path.join(albums_folder, 'index.html'), 'w') as f:
         f.write(content)
 
-def create_album_page(album, data_folder, albums_folder, photo_mapping, oldest_first):
+def create_album_page(env, album, data_folder, albums_folder, photo_mapping, oldest_first):
     album_id = album['id']
     title = album.get('title', 'Untitled Album')
     photos = album.get('photos', [])
@@ -175,33 +230,111 @@ def create_album_page(album, data_folder, albums_folder, photo_mapping, oldest_f
     # Sort photos by date
     album_photos.sort(key=lambda x: x.get('date_taken', ''), reverse=not oldest_first)
 
-    content = render_template('album.html', title=title, photos=album_photos)
+    content = render_template(env, 'album.html', title=title, photos=album_photos)
 
     with open(os.path.join(albums_folder, f'{album_id}.html'), 'w') as f:
         f.write(content)
 
-def create_contacts_html(data_folder, dest_folder):
+def extract_nsid_or_username(url):
+    # Check if the URL contains the NSID (indicated by @N in the URL)
+    if '@N' in url:
+        nsid = url.rstrip('/').split('/')[-1]
+        return nsid, None
+    else:
+        username = url.rstrip('/').split('/')[-1]
+        return None, username
+
+def create_safe_filename(name):
+    # Remove any non-alphanumeric characters and replace spaces with underscores
+    safe_name = re.sub(r'[^\w\-_\. ]', '', name)
+    safe_name = safe_name.replace(' ', '_')
+    # Limit the length of the filename
+    return safe_name[:50]  # Limiting to 50 characters
+
+def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
     logging.info("Creating contacts/index.html")
     contacts_file = os.path.join(data_folder, 'contacts_part001.json')
     contacts_folder = os.path.join(dest_folder, 'contacts')
+    avatars_folder = os.path.join(dest_folder, 'avatars')
     os.makedirs(contacts_folder, exist_ok=True)
+    os.makedirs(avatars_folder, exist_ok=True)
+
+    # Load the last fetch times
+    last_fetch_file = os.path.join(avatars_folder, 'last_fetch.json')
+    if os.path.exists(last_fetch_file):
+        with open(last_fetch_file, 'r') as f:
+            last_fetch_times = json.load(f)
+    else:
+        last_fetch_times = {}
 
     with open(contacts_file, 'r') as f:
         contacts_data = json.load(f)
+    
+    updated_contacts = []
+    for name, url in contacts_data.get('contacts', {}).items():
+        avatar_url = None
+        
+        if fetch_avatars:
+            avatar_url = get_flickr_buddy_icon_url(url)
 
-    content = render_template('contacts.html', contacts=contacts_data['contacts'])
+        safe_name = create_safe_filename(name)
+        avatar_filename = f"{safe_name}.jpg"
+        avatar_path = os.path.join(avatars_folder, avatar_filename)
+
+        if avatar_url:
+            try:
+                headers = {}
+                if safe_name in last_fetch_times:
+                    headers['If-Modified-Since'] = last_fetch_times[safe_name]
+
+                response = requests.get(avatar_url, headers=headers)
+                
+                if response.status_code == 304:  # Not Modified
+                    logging.debug(f"Avatar for {name} not modified since last fetch")
+                elif response.status_code == 200:
+                    with open(avatar_path, 'wb') as f:
+                        f.write(response.content)
+                    logging.debug(f"Successfully saved avatar to {avatar_path}")
+                    last_fetch_times[safe_name] = formatdate(timeval=None, localtime=False, usegmt=True)
+                else:
+                    response.raise_for_status()
+
+                avatar_relative_path = os.path.relpath(avatar_path, contacts_folder)
+            except requests.RequestException as e:
+                logging.error(f"Failed to fetch avatar for {name}: {e}")
+                avatar_relative_path = os.path.relpath(GENERIC_AVATAR_URL, contacts_folder)
+            except IOError as e:
+                logging.error(f"Failed to save avatar for {name}: {e}")
+                avatar_relative_path = os.path.relpath(GENERIC_AVATAR_URL, contacts_folder)
+        else:
+            logging.debug(f"No avatar URL found for {name}, using generic avatar")
+            avatar_relative_path = os.path.relpath(GENERIC_AVATAR_URL, contacts_folder)
+        
+        updated_contacts.append({
+            "name": name,
+            "url": url,
+            "avatar": avatar_relative_path
+        })
+
+    # Save the updated last fetch times
+    with open(last_fetch_file, 'w') as f:
+        json.dump(last_fetch_times, f)
+
+    content = render_template(env, 'contacts.html', contacts=updated_contacts)
 
     with open(os.path.join(contacts_folder, 'index.html'), 'w') as f:
         f.write(content)
 
-def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enable_paging, photos_per_page):
+def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enable_paging, photos_per_page, fetch_avatars):
+    setup_logging(verbose)
+    env = get_templates_env()
+    
     try:
-        check_templates()
+        check_templates(env)
     except FileNotFoundError as e:
         logging.error(str(e))
         sys.exit(1)
 
-    setup_logging(verbose)
     logging.info(f"Processing Flickr data from {source_folder} to {dest_folder}")
 
     data_folder = os.path.join(dest_folder, 'data')
@@ -220,15 +353,16 @@ def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enabl
 
         photo_mapping = get_photo_filename_mapping(images_folder)
 
-        create_index_html(dest_folder)
-        create_photos_html(data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page)
-        create_albums_html(data_folder, dest_folder, photo_mapping, oldest_first)
-        create_contacts_html(data_folder, dest_folder)
+        create_index_html(env, dest_folder)
+        create_photos_html(env, data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page)
+        create_albums_html(env, data_folder, dest_folder, photo_mapping, oldest_first)
+        create_contacts_html(env, data_folder, dest_folder, fetch_avatars)
 
         logging.info("Flickr archive processing complete")
     except Exception as e:
         logging.error(f"An error occurred during processing: {str(e)}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate static Flickr archive")
@@ -238,12 +372,23 @@ if __name__ == "__main__":
     parser.add_argument("--oldest-first", action="store_true", help="Sort photos and albums oldest first")
     parser.add_argument("--no-paging", action="store_true", help="Disable paging for photos")
     parser.add_argument("--photos-per-page", type=int, default=20, help="Number of photos per page (default: 20)")
+    parser.add_argument("--no-fetch-avatars", action="store_true", help="Disable fetching of user avatars")
     args = parser.parse_args()
 
     try:
-        process_flickr_data(args.source_folder, args.destination_folder, args.verbose,
-                            args.oldest_first, not args.no_paging, args.photos_per_page)
+        process_flickr_data(
+            source_folder=args.source_folder,
+            dest_folder=args.destination_folder,
+            verbose=args.verbose,
+            oldest_first=args.oldest_first,
+            enable_paging=not args.no_paging,
+            photos_per_page=args.photos_per_page,
+            fetch_avatars=not args.no_fetch_avatars
+        )
         print(f"Flickr archive processed and static HTML files created in {args.destination_folder}")
     except Exception as e:
+        logging.error(f"An unexpected error occurred: {str(e)}")
+        sys.exit(1)
+
         logging.error(f"An unexpected error occurred: {str(e)}")
         sys.exit(1)
