@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 import time
 import re
 
-
 # List of required templates
 REQUIRED_TEMPLATES = [
     'index.html',
@@ -121,7 +120,7 @@ def create_index_html(env, dest_folder):
     with open(os.path.join(dest_folder, 'index.html'), 'w') as f:
         f.write(content)
 
-def create_photo_page(env: Environment, photo: dict, photo_mapping: dict, dest_folder: str) -> None:
+def create_photo_page(env, photo, photo_mapping, dest_folder):
     try:
         photo_id = photo['id']
         title = photo.get('name', 'Untitled')
@@ -142,8 +141,6 @@ def create_photo_page(env: Environment, photo: dict, photo_mapping: dict, dest_f
     except Exception as e:
         logging.error(f"Unexpected error creating photo page for photo ID {photo_id}: {str(e)}")
 
-
-        
 def create_photos_html(env, data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page):
     logging.info("Creating photos/index.html")
     photos = []
@@ -181,7 +178,6 @@ def create_photos_html(env, data_folder, dest_folder, photo_mapping, oldest_firs
 
     if enable_paging:
         shutil.copy(os.path.join(photos_folder, 'index1.html'), os.path.join(photos_folder, 'index.html'))
-
 
 def create_albums_html(env, data_folder, dest_folder, photo_mapping, oldest_first):
     logging.info("Creating albums/index.html and individual album pages")
@@ -260,15 +256,7 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
     contacts = contacts_data['contacts']
     updated_contacts = []
 
-    # Handle both dictionary and list formats
-    if isinstance(contacts, dict):
-        contacts_items = contacts.items()
-    elif isinstance(contacts, list):
-        contacts_items = [(contact.get('name', ''), contact.get('url', '')) for contact in contacts]
-    else:
-        raise ValueError(f"Unexpected type for contacts in {contacts_file}: {type(contacts)}")
-
-    for name, url in contacts_items:
+    for name, url in contacts.items():
         avatar_url = None
 
         if fetch_avatars:
@@ -386,8 +374,5 @@ if __name__ == "__main__":
         )
         print(f"Flickr archive processed and static HTML files created in {args.destination_folder}")
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {str(e)}")
-        sys.exit(1)
-
         logging.error(f"An unexpected error occurred: {str(e)}")
         sys.exit(1)
