@@ -5,8 +5,7 @@ import json
 import shutil
 import logging
 import argparse
-from datetime import datetime, timedelta
-from email.utils import parsedate_to_datetime, formatdate
+from email.utils import formatdate
 import math
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, TemplateSyntaxError
 import requests
@@ -30,12 +29,6 @@ def setup_logging(verbose):
     logging.basicConfig(level=level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 GENERIC_AVATAR_URL = "https://www.flickr.com/images/buddyicon.gif"
-
-import requests
-from bs4 import BeautifulSoup
-import re
-import logging
-import time
 
 def get_flickr_buddy_icon_url(flickr_url):
     try:
@@ -128,7 +121,7 @@ def create_index_html(env, dest_folder):
     with open(os.path.join(dest_folder, 'index.html'), 'w') as f:
         f.write(content)
 
-def create_photo_page(env, photo, photo_mapping, dest_folder):
+def create_photo_page(env: Environment, photo: dict, photo_mapping: dict, dest_folder: str) -> None:
     try:
         photo_id = photo['id']
         title = photo.get('name', 'Untitled')
@@ -235,15 +228,6 @@ def create_album_page(env, album, data_folder, albums_folder, photo_mapping, old
     with open(os.path.join(albums_folder, f'{album_id}.html'), 'w') as f:
         f.write(content)
 
-def extract_nsid_or_username(url):
-    # Check if the URL contains the NSID (indicated by @N in the URL)
-    if '@N' in url:
-        nsid = url.rstrip('/').split('/')[-1]
-        return nsid, None
-    else:
-        username = url.rstrip('/').split('/')[-1]
-        return None, username
-
 def create_safe_filename(name):
     # Remove any non-alphanumeric characters and replace spaces with underscores
     safe_name = re.sub(r'[^\w\-_\. ]', '', name)
@@ -269,11 +253,24 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
 
     with open(contacts_file, 'r') as f:
         contacts_data = json.load(f)
-    
+
+    if not isinstance(contacts_data, dict) or 'contacts' not in contacts_data:
+        raise ValueError(f"Unexpected structure in {contacts_file}: expected a dictionary with a 'contacts' key")
+
+    contacts = contacts_data['contacts']
     updated_contacts = []
-    for name, url in contacts_data.get('contacts', {}).items():
+
+    # Handle both dictionary and list formats
+    if isinstance(contacts, dict):
+        contacts_items = contacts.items()
+    elif isinstance(contacts, list):
+        contacts_items = [(contact.get('name', ''), contact.get('url', '')) for contact in contacts]
+    else:
+        raise ValueError(f"Unexpected type for contacts in {contacts_file}: {type(contacts)}")
+
+    for name, url in contacts_items:
         avatar_url = None
-        
+
         if fetch_avatars:
             avatar_url = get_flickr_buddy_icon_url(url)
 
@@ -288,7 +285,7 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
                     headers['If-Modified-Since'] = last_fetch_times[safe_name]
 
                 response = requests.get(avatar_url, headers=headers)
-                
+
                 if response.status_code == 304:  # Not Modified
                     logging.debug(f"Avatar for {name} not modified since last fetch")
                 elif response.status_code == 200:
@@ -309,7 +306,7 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
         else:
             logging.debug(f"No avatar URL found for {name}, using generic avatar")
             avatar_relative_path = os.path.relpath(GENERIC_AVATAR_URL, contacts_folder)
-        
+
         updated_contacts.append({
             "name": name,
             "url": url,
@@ -324,6 +321,8 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars):
 
     with open(os.path.join(contacts_folder, 'index.html'), 'w') as f:
         f.write(content)
+
+
 
 def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enable_paging, photos_per_page, fetch_avatars):
     setup_logging(verbose)

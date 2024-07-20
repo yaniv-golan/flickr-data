@@ -8,14 +8,18 @@
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         h1 { color: #0063dc; }
         ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 10px; }
+        li { margin-bottom: 10px; display: flex; align-items: center; }
+        img { border-radius: 50%; margin-right: 10px; }
     </style>
 </head>
 <body>
     <h1>My Contacts</h1>
     <ul>
-    {% for name, url in contacts.items() %}
-        <li><a href="{{ url }}">{{ name }}</a></li>
+    {% for contact in contacts %}
+        <li>
+            <img src="{{ contact.avatar }}" alt="{{ contact.name }}" width="40" height="40">
+            <a href="{{ contact.url }}">{{ contact.name }}</a>
+        </li>
     {% endfor %}
     </ul>
 </body>
