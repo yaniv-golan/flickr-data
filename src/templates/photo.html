@@ -120,8 +120,8 @@
     <div class="photo-info">
         <div class="photo-meta">
             <div class="user-info">
-                <img src="/images/user_avatar.jpg" alt="User Avatar">
-                <span>{{ photo.owner }}</span>
+                <img src="{{ user_avatar }}" alt="User Avatar">
+                <span>{{ user_name }}</span>
             </div>
             <div class="stats">
                 <span>{{ photo.count_views }} views</span>
@@ -149,7 +149,7 @@
             <div class="group-list">
                 {% for group in photo.groups %}
                 <div class="group-item">
-                    <img src="/images/group_icon.jpg" alt="{{ group.name }}">
+                    <img src="{{ group.icon }}" alt="{{ group.name }}">
                     <span>{{ group.name }}</span>
                 </div>
                 {% endfor %}
@@ -161,9 +161,9 @@
         <div class="albums">
             <h3>This photo is in {{ photo.albums|length }} albums</h3>
             <div class="album-list">
-                {% for album in photo.albums %}
+                {% for album in albums %}
                 <div class="album-item">
-                    <img src="/images/album_cover.jpg" alt="{{ album.title }}">
+                    <img src="{{ album.icon }}" alt="{{ album.title }}">
                     <span>{{ album.title }}</span>
                 </div>
                 {% endfor %}
@@ -176,7 +176,7 @@
             <h3>Tags</h3>
             <ul>
                 {% for tag in photo.tags %}
-                <li>{{ tag.tag }}</li>
+                <li>{{ tag }}</li>
                 {% endfor %}
             </ul>
         </div>
