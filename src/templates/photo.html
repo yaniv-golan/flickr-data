@@ -9,12 +9,16 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-color: #212124;
-            color: #fff;
+            background-color: #f3f5f6;
+            color: #333;
         }
         .header {
-            background-color: #212124;
+            background-color: #0063dc;
+            color: #fff;
             padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .logo {
             color: #fff;
@@ -25,22 +29,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: calc(100vh - 60px);
+            margin: 20px 0;
             position: relative;
         }
         .photo-container img {
             max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            height: auto;
         }
         .nav-arrow {
             position: absolute;
             top: 50%;
             font-size: 24px;
-            color: #fff;
-            background: rgba(0,0,0,0.5);
+            color: #333;
+            background: rgba(255, 255, 255, 0.8);
             padding: 10px;
             text-decoration: none;
+            border-radius: 50%;
+            transform: translateY(-50%);
         }
         .nav-arrow.left { left: 10px; }
         .nav-arrow.right { right: 10px; }
@@ -48,12 +53,21 @@
             background-color: #fff;
             color: #212124;
             padding: 20px;
+            margin: 0 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 20px auto;
         }
         .photo-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
         }
         .user-info img {
             width: 32px;
@@ -107,14 +121,15 @@
 <body>
     <div class="header">
         <a href="/index.html" class="logo">Statickr</a>
+        <a href="/photos.html">Back to Photos</a>
     </div>
     <div class="photo-container">
-        {% if prev_photo %}
-        <a href="{{ prev_photo }}.html" class="nav-arrow left">&lt;</a>
+        {% if photo.prev_photo %}
+        <a href="{{ photo.prev_photo }}.html" class="nav-arrow left">&lt;</a>
         {% endif %}
-        <img src="{{ img_src }}" alt="{{ photo.name }}">
-        {% if next_photo %}
-        <a href="{{ next_photo }}.html" class="nav-arrow right">&gt;</a>
+        <img src="{{ photo.img_src }}" alt="{{ photo.name }}">
+        {% if photo.next_photo %}
+        <a href="{{ photo.next_photo }}.html" class="nav-arrow right">&gt;</a>
         {% endif %}
     </div>
     <div class="photo-info">
@@ -161,7 +176,7 @@
         <div class="albums">
             <h3>This photo is in {{ photo.albums|length }} albums</h3>
             <div class="album-list">
-                {% for album in albums %}
+                {% for album in photo.albums %}
                 <div class="album-item">
                     <img src="{{ album.icon }}" alt="{{ album.title }}">
                     <span>{{ album.title }}</span>

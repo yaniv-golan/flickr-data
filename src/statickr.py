@@ -122,6 +122,8 @@ def create_index_html(env, dest_folder):
     with open(os.path.join(dest_folder, 'index.html'), 'w') as f:
         f.write(content)
 
+import logging
+
 def create_photo_page(env, photo, photo_mapping, dest_folder, user_avatar, user_name, albums):
     try:
         photo_id = photo['id']
@@ -138,8 +140,27 @@ def create_photo_page(env, photo, photo_mapping, dest_folder, user_avatar, user_
         img_src = f"../images/{img_filename}" if img_filename else ''
 
         # Update the albums list to include icons
+        updated_albums = []
         for album in albums:
-            album['icon'] = f"../images/{album['cover_photo_filename']}" if album.get('cover_photo_filename') else '/images/album_cover.jpg'
+            updated_album = album.copy()  # Create a copy to avoid modifying the original album
+            cover_photo = album.get('cover_photo', '')
+            cover_photo_filename = cover_photo.split('/')[-1] if cover_photo else ''
+            updated_album['icon'] = f"../images/{cover_photo_filename}" if cover_photo_filename else '/images/album_cover.jpg'
+            updated_albums.append(updated_album)
+
+        # Update the groups list to include icons
+        updated_groups = []
+        for group in groups:
+            updated_group = group.copy()  # Create a copy to avoid modifying the original group
+            icon = group.get('icon', '')
+            updated_group['icon'] = f"/path_to_group_icons/{icon}" if icon else '/images/group_icon.jpg'
+            updated_groups.append(updated_group)
+
+        # Debugging statements to check paths if the photo title is "180 RED Alef"
+        if title == "180 RED Alef":
+            logging.debug(f"Image source: {img_src}")
+            logging.debug(f"Updated Albums: {updated_albums}")
+            logging.debug(f"Updated Groups: {updated_groups}")
 
         content = render_template(env, 'photo.html',
                                   photo={
@@ -150,14 +171,13 @@ def create_photo_page(env, photo, photo_mapping, dest_folder, user_avatar, user_
                                       'count_faves': count_faves,
                                       'count_comments': count_comments,
                                       'exif_data': exif_data,
-                                      'groups': groups,
-                                      'tags': tags
+                                      'groups': updated_groups,
+                                      'tags': tags,
+                                      'img_src': img_src,
                                   },
-                                  title=title,
-                                  img_src=img_src,
                                   user_avatar=user_avatar,
                                   user_name=user_name,
-                                  albums=albums)
+                                  albums=updated_albums)
 
         photo_folder = os.path.join(dest_folder, 'photos')
         os.makedirs(photo_folder, exist_ok=True)
@@ -167,6 +187,39 @@ def create_photo_page(env, photo, photo_mapping, dest_folder, user_avatar, user_
         logging.error(f"Failed to create photo page for photo ID {photo_id}: {str(e)}")
     except Exception as e:
         logging.error(f"Unexpected error creating photo page for photo ID {photo_id}: {str(e)}")
+
+
+
+
+def create_photo_html(env, photo_id, photo_metadata, user_name, user_avatar, prev_photo_id, next_photo_id, output_path, photo_mapping):
+    try:
+        template = env.get_template('photo.html')
+        img_filename = photo_mapping.get(photo_id, f"{photo_id}_o.jpg")
+        photo_data = {
+            'photo': {
+                'id': photo_id,
+                'name': photo_metadata.get('name', 'Untitled'),
+                'description': photo_metadata.get('description', ''),
+                'img_src': f"../images/{img_filename}",  # This is the important line
+                'count_views': photo_metadata.get('count_views', 0),
+                'count_faves': photo_metadata.get('count_faves', 0),
+                'count_comments': photo_metadata.get('count_comments', 0),
+                'exif_data': photo_metadata.get('exif_data', {}),
+                'groups': photo_metadata.get('groups', []),
+                'albums': photo_metadata.get('albums', []),
+                'tags': photo_metadata.get('tags', [])
+            },
+            'user_avatar': user_avatar,
+            'user_name': user_name,
+            'prev_photo': prev_photo_id,
+            'next_photo': next_photo_id
+        }
+        output = template.render(photo_data)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+        logging.info(f"Generated photo page: {output_path}")
+    except Exception as e:
+        logging.error(f"Error creating photo HTML for {photo_id}: {str(e)}")
 
 def create_photos_html(env, data_folder, dest_folder, photo_mapping, oldest_first, enable_paging, photos_per_page, user_avatar, user_name, albums):
     logging.info("Creating photos/index.html")
@@ -334,16 +387,46 @@ def create_contacts_html(env, data_folder, dest_folder, fetch_avatars, skip_exis
         f.write(content)
 
 
+def get_navigation_photos(current_photo_id, photo_ids):
+    """
+    Get the previous and next photo IDs for navigation.
+    
+    :param current_photo_id: The ID of the current photo
+    :param photo_ids: A list of all photo IDs
+    :return: A tuple of (previous_photo_id, next_photo_id)
+    """
+    try:
+        current_index = photo_ids.index(current_photo_id)
+        prev_photo_id = photo_ids[current_index - 1] if current_index > 0 else None
+        next_photo_id = photo_ids[current_index + 1] if current_index < len(photo_ids) - 1 else None
+        return prev_photo_id, next_photo_id
+    except ValueError:
+        logging.warning(f"Photo ID {current_photo_id} not found in the list of photos.")
+        return None, None
+    
 def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enable_paging, photos_per_page, fetch_avatars, skip_existing_avatars):
     setup_logging(verbose)
-    env = get_templates_env()
     
-    try:
-        check_templates(env)
-    except FileNotFoundError as e:
-        logging.error(str(e))
-        sys.exit(1)
+    # Adjust the template directory path
+    template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+    env = Environment(loader=FileSystemLoader(template_dir))
 
+    try:
+        missing_templates = []
+        for template_name in REQUIRED_TEMPLATES:
+            try:
+                env.get_template(template_name)
+            except TemplateNotFound:
+                missing_templates.append(template_name)
+        
+        if missing_templates:
+            logging.error(f"Missing templates: {', '.join(missing_templates)}")
+            sys.exit(1)
+        
+    except TemplateNotFound as e:
+        logging.error(f"Missing template: {e.name}")
+        sys.exit(1)
+        
     logging.info(f"Processing Flickr data from {source_folder} to {dest_folder}")
 
     data_folder = os.path.join(dest_folder, 'data')
@@ -380,10 +463,33 @@ def process_flickr_data(source_folder, dest_folder, verbose, oldest_first, enabl
         create_albums_html(env, data_folder, dest_folder, photo_mapping, oldest_first)
         create_contacts_html(env, data_folder, dest_folder, fetch_avatars, skip_existing_avatars)
 
+        # Generate individual photo pages
+        for photo_id, filename in photo_mapping.items():
+            photo_metadata_file = os.path.join(data_folder, f'photo_{photo_id}.json')
+            if os.path.exists(photo_metadata_file):
+                with open(photo_metadata_file, 'r') as f:
+                    photo_metadata = json.load(f)
+                prev_photo_id, next_photo_id = get_navigation_photos(photo_id, list(photo_mapping.keys()))
+                create_photo_html(
+                    env,
+                    photo_id,
+                    photo_metadata,
+                    user_name,
+                    user_avatar,
+                    prev_photo_id,
+                    next_photo_id,
+                    os.path.join(dest_folder, 'photos', f"{photo_id}.html"),
+                    photo_mapping  
+                )
+            else:
+                logging.warning(f"Metadata file not found for photo {photo_id}, skipping.")
+
         logging.info("Flickr archive processing complete")
     except Exception as e:
         logging.error(f"An error occurred during processing: {str(e)}")
         sys.exit(1)
+
+
 
 
 if __name__ == "__main__":
